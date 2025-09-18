@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading;
+using System.Threading.Tasks;
+using Cine.Services;
 
 namespace Cine.Controllers
 {
@@ -8,15 +11,17 @@ namespace Cine.Controllers
     public class MovieController : ControllerBase
     {
         private readonly CallApiMovies _callApiMovies;
+        private readonly IMovieIdentifier _identifier;
 
         private static readonly string[] Summaries = new[]
     {
             "Matrix", "Matrix 1 ", "Matrix 2 ", "Matrix 3 ", "Matrix 4 "
         };
 
-        public  MovieController(CallApiMovies callApiMovies )
+        public  MovieController(CallApiMovies callApiMovies, IMovieIdentifier identifier)
         {
             _callApiMovies = callApiMovies;
+            _identifier = identifier;
         }
 
         /// <summary>
@@ -27,7 +32,7 @@ namespace Cine.Controllers
         /// <param name="tipo">Tipo de contenido a buscar. Puede ser "movie", "series", etc. Si se deja vacío, devuelve todos los tipos.</param>
         /// <param name="pagina">Número de página de los resultados. Por defecto es 1.</param>
         /// <param name="version">Versión de la API a utilizar. Por defecto es 1.</param>
-        /// <returns>Retorna un <see cref="IActionResult"/> con la lista de películas encontradas. Cada película incluye título, año, actores, URL de IMDb y poster.</returns>
+        /// <returns>Retorna un <see cref='IActionResult'/> con la lista de películas encontradas. Cada película incluye título, año, actores, URL de IMDb y poster.</returns>
         [HttpGet("ListMovies")]
         public async Task<IActionResult> ListMovies(
             [FromQuery] string titulo = "Matrix",
@@ -51,8 +56,28 @@ namespace Cine.Controllers
             }
         }
 
+        // POST api/movie/adivinar
+        [HttpPost("adivinar")]
+        public async Task<IActionResult> Adivinar([FromBody] string descripcion, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(descripcion))
+                return BadRequest("La descripción es requerida.");
 
+            var movie = await _identifier.IdentificarAsync(descripcion, ct);
+            if (movie == null) return NotFound();
 
+            return Ok(movie);
+        }
 
+        // POST api/movie/candidatos
+        [HttpPost("candidatos")]
+        public async Task<IActionResult> Candidatos([FromBody] string descripcion, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(descripcion))
+                return BadRequest("La descripción es requerida.");
+
+            var items = await _identifier.IdentificarCandidatosAsync(descripcion, ct: ct);
+            return Ok(items);
+        }
     }
 }

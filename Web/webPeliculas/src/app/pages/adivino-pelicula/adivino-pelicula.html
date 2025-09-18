@@ -1,0 +1,52 @@
+<section class="container">
+  <h2 class="mb-3">Adivino tu película</h2>
+
+  <form class="bg-dark border border-secondary rounded p-3" (ngSubmit)="onSubmit()">
+    <div class="mb-3">
+      <label class="form-label">Descripción o algo que pasa</label>
+      <textarea class="form-control bg-dark text-light" rows="3" [(ngModel)]="description" name="description" placeholder="Ej: Un arqueólogo aventurero busca un artefacto antiguo" required></textarea>
+    </div>
+
+    <!-- Campos adicionales removidos según contrato del backend (solo descripción) -->
+
+    <div class="mt-3 d-flex gap-2">
+      <button class="btn btn-primary" type="submit" [disabled]="loading">{{ loading ? 'Buscando...' : 'Adivinar' }}</button>
+      <button class="btn btn-outline-secondary" type="button" (click)="reset()" [disabled]="loading">Limpiar</button>
+    </div>
+  </form>
+
+  <div class="mt-4" *ngIf="error" >
+    <div class="alert alert-danger">{{ error }}</div>
+  </div>
+
+  <div class="mt-4" *ngIf="result">
+    <div class="card bg-dark border-secondary">
+      <div class="row g-0">
+        <div class="col-12 col-md-3" *ngIf="result.poster">
+          <img [src]="result.poster" class="img-fluid rounded-start" alt="Poster" />
+        </div>
+        <div class="col">
+          <div class="card-body">
+            <h5 class="card-title">{{ result.title }} <small class="text-secondary" *ngIf="result.year">({{ result.year }})</small></h5>
+            <p class="card-text text-secondary" *ngIf="result.plot">{{ result.plot }}</p>
+            <p class="card-text" *ngIf="result.confidence !== undefined">
+              <small class="text-info">Confianza: {{ (result.confidence * 100) | number:'1.0-0' }}%</small>
+            </p>
+            <div *ngIf="result.suggestions?.length">
+              <small class="text-secondary d-block mb-1">Sugerencias relacionadas:</small>
+              <div class="d-flex flex-wrap gap-2">
+                <span class="badge text-bg-info" *ngFor="let s of result.suggestions">{{ s }}</span>
+              </div>
+            </div>
+            <div *ngIf="candidates?.length" class="mt-3">
+              <small class="text-secondary d-block mb-1">Candidatos:</small>
+              <div class="d-flex flex-wrap gap-2">
+                <span class="badge text-bg-secondary" *ngFor="let c of candidates">{{ c }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
