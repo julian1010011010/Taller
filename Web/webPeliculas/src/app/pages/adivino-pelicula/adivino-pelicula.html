@@ -27,7 +27,10 @@
         </div>
         <div class="col">
           <div class="card-body">
-            <h5 class="card-title">{{ result.title }} <small class="text-secondary" *ngIf="result.year">({{ result.year }})</small></h5>
+            <h5 class="card-title">
+              {{ result.title }} <small class="text-secondary" *ngIf="result.year">({{ result.year }})</small>
+              <span class="badge text-bg-warning ms-2" *ngIf="usedAi">IA</span>
+            </h5>
             <p class="card-text text-secondary" *ngIf="result.plot">{{ result.plot }}</p>
             <p class="card-text" *ngIf="result.confidence !== undefined">
               <small class="text-info">Confianza: {{ (result.confidence * 100) | number:'1.0-0' }}%</small>
@@ -38,12 +41,23 @@
                 <span class="badge text-bg-info" *ngFor="let s of result.suggestions">{{ s }}</span>
               </div>
             </div>
-            <div *ngIf="candidates?.length" class="mt-3">
-              <small class="text-secondary d-block mb-1">Candidatos:</small>
-              <div class="d-flex flex-wrap gap-2">
-                <span class="badge text-bg-secondary" *ngFor="let c of candidates">{{ c }}</span>
-              </div>
-            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Candidatos siempre visibles si hay resultados de la API -->
+  <div class="mt-4" *ngIf="candidates?.length">
+    <h5 class="mb-2 text-secondary">Candidatos</h5>
+    <div class="row g-3">
+      <div class="col-12 col-sm-6 col-lg-4 col-xxl-3" *ngFor="let c of candidates">
+        <div class="card h-100 bg-dark border-secondary">
+          <img *ngIf="c.poster" [src]="c.poster" class="card-img-top" [alt]="c.title" />
+          <div class="card-body">
+            <h6 class="card-title">{{ c.title }} <small class="text-secondary" *ngIf="c.year">({{ c.year }})</small></h6>
+            <p class="card-text mb-2" *ngIf="c.actors"><small class="text-secondary">{{ c.actors }}</small></p>
+            <a class="btn btn-sm btn-outline-info" *ngIf="c.imdbUrl" [href]="c.imdbUrl" target="_blank" rel="noopener">Ver en IMDb</a>
           </div>
         </div>
       </div>

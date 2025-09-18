@@ -1,7 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GuessMovieService, GuessResponse } from '../../services/guess-movie.service';
+import { MovieItem } from '../../services/movies.service';
+import { Subscription, catchError, finalize, of, tap, timeout } from 'rxjs';
 
 @Component({
   selector: 'app-adivino-pelicula',
@@ -14,34 +16,62 @@ import { GuessMovieService, GuessResponse } from '../../services/guess-movie.ser
 })
 export class AdivinoPeliculaPage {
   private readonly svc = inject(GuessMovieService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   description = '';
-  candidates: string[] = [];
+  candidates: MovieItem[] = [];
 
   loading = false;
   error: string | null = null;
   result: GuessResponse | null = null;
+  usedAi = false;
+  private submitSub?: Subscription;
 
   onSubmit() {
     if (!this.description?.trim()) return;
     this.loading = true;
     this.error = null;
     this.result = null;
-    this.svc.guessMovie(this.description.trim()).subscribe({
-      next: (res) => {
+    const desc = this.description.trim();
+    let usedAi = false;
+    this.submitSub?.unsubscribe();
+    this.submitSub = this.svc
+      .guessMovie(desc)
+      .pipe(
+        timeout({ each: 8000 }),
+        // En caso de error, probar fallback IA
+        catchError(() => {
+          return this.svc.guessMovieAi(desc).pipe(
+            timeout({ each: 12000 }),
+            tap(() => (usedAi = true))
+          );
+        }),
+        // Si también falla el fallback, mostrar error y continuar con null
+        catchError((err) => {
+          this.error = err?.message || 'No se pudo adivinar la película';
+          return of(null);
+        }),
+        finalize(() => {
+          this.loading = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe((res) => {
         this.result = res;
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = err?.message || 'No se pudo adivinar la película';
-        this.loading = false;
-      }
-    });
+        this.usedAi = usedAi;
+        this.cdr.markForCheck();
+      });
 
     // Cargar candidatos de forma oportunista (ignorar error)
     this.svc.getCandidates(this.description.trim()).subscribe({
-      next: (list) => this.candidates = list || [],
-      error: () => this.candidates = []
+      next: (list) => {
+        this.candidates = list || [];
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.candidates = [];
+        this.cdr.markForCheck();
+      }
     });
   }
 
@@ -49,6 +79,7 @@ export class AdivinoPeliculaPage {
     this.description = '';
     this.result = null;
     this.error = null;
-    this.candidates = [];
+  this.candidates = [];
+    this.usedAi = true;
   }
 }

@@ -39,7 +39,7 @@ export class MoviesService {
   }
 }
 
-function mapApiMovie(api: ApiMovieItem): MovieItem {
+export function mapApiMovie(api: ApiMovieItem): MovieItem {
   return {
     title: api['#TITLE'],
     year: api['#YEAR'],

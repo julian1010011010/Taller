@@ -3,20 +3,22 @@ using Cine.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Registrar servicios antes de Build()
 builder.Services.AddControllers();
+
+// Vincular configuración OpenAI desde appsettings
+builder.Services.Configure<OpenAiSettings>(builder.Configuration.GetSection("OpenAi"));
 
 // HttpClients
 builder.Services.AddHttpClient<CallApiMovies>();
-builder.Services.AddHttpClient<OpenAiMovieGuesser>();
 
-// Servicios de IA y orquestador
+// OpenAI como proveedor IA
+builder.Services.AddHttpClient<OpenAiMovieGuesser>();
 builder.Services.AddScoped<IAiMovieGuesser, OpenAiMovieGuesser>();
+
 builder.Services.AddScoped<IMovieIdentifier, MovieIdentifier>();
 
 var app = builder.Build();
 
-// Middlewares
 app.UseHttpsRedirection();
 app.UseAuthorization();
 

@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+import { ApiMovieItem, MovieItem, mapApiMovie } from './movies.service';
 
 export interface GuessResponse {
   title: string;
@@ -25,9 +26,19 @@ export class GuessMovieService {
     });
   }
 
-  // Opcional: obtener candidatos ([HttpPost("candidatos")])
-  getCandidates(description: string): Observable<string[]> {
-    return this.http.post<string[]>('/api/Movie/candidatos', JSON.stringify(description), {
+  // Obtener candidatos con info completa ([HttpPost("candidatos")])
+  // El backend devuelve una lista como la del buscador con claves #TITLE, etc.
+  getCandidates(description: string): Observable<MovieItem[]> {
+    return this.http
+      .post<ApiMovieItem[]>('/api/Movie/candidatos', JSON.stringify(description), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .pipe(map(items => items?.map(mapApiMovie) ?? []));
+  }
+
+  // Opcional: endpoint AI en tu backend (ej. /api/Movie/adivinar/ai)
+  guessMovieAi(description: string): Observable<GuessResponse> {
+    return this.http.post<GuessResponse>('/api/Movie/adivinar/ai', JSON.stringify(description), {
       headers: { 'Content-Type': 'application/json' }
     });
   }

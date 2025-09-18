@@ -6,19 +6,15 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace Cine.Services
 {
     public class OpenAiMovieGuesser : IAiMovieGuesser
     {
         private readonly HttpClient _http;
-        private readonly string _apiKey;
-        private readonly string _endpoint;
-        private readonly string _model;
+        private readonly OpenAiSettings _cfg;
         private readonly bool _isAzure;
-        private readonly string? _apiVersion;
-        private readonly string? _org;
-        private readonly string? _project;
 
         private record ChatMessage([property: JsonPropertyName("role")] string Role,
                                    [property: JsonPropertyName("content")] string Content);
@@ -39,22 +35,27 @@ namespace Cine.Services
             public List<TitleCandidate> Candidates { get; set; } = new();
         }
 
-        public OpenAiMovieGuesser(HttpClient http)
+        public OpenAiMovieGuesser(HttpClient http, IOptions<OpenAiSettings> options)
         {
             _http = http;
-            // Leer la clave desde la variable de entorno estándar
-            _apiKey = (Environment.GetEnvironmentVariable("OPENAI_API_KEY")?.Trim())
-                      ?? throw new InvalidOperationException("Falta la variable de entorno OPENAI_API_KEY.");
-            _endpoint = (Environment.GetEnvironmentVariable("OPENAI_API_BASE") ?? "https://api.openai.com").TrimEnd('/');
-            _model = Environment.GetEnvironmentVariable("OPENAI_MODEL") ?? "gpt-4o-mini";
-            _apiVersion = Environment.GetEnvironmentVariable("OPENAI_API_VERSION");
-            _org = Environment.GetEnvironmentVariable("OPENAI_ORG");
-            _project = Environment.GetEnvironmentVariable("OPENAI_PROJECT");
+            _cfg = options.Value ?? new OpenAiSettings();
 
-            // Heurística: si el endpoint parece de Azure, cambiar modo
-            var provider = Environment.GetEnvironmentVariable("OPENAI_PROVIDER");
-            _isAzure = (provider?.Equals("azure", StringComparison.OrdinalIgnoreCase) ?? false)
-                       || _endpoint.Contains("openai.azure.com", StringComparison.OrdinalIgnoreCase);
+            // Fallback a environment variables si no viene de appsettings
+            _cfg.ApiKey ??= Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+            _cfg.BaseUrl ??= Environment.GetEnvironmentVariable("OPENAI_API_BASE") ?? "https://api.openai.com";
+            _cfg.Model ??= Environment.GetEnvironmentVariable("OPENAI_MODEL") ?? "gpt-4o-mini";
+            _cfg.Provider ??= Environment.GetEnvironmentVariable("OPENAI_PROVIDER");
+            _cfg.ApiVersion ??= Environment.GetEnvironmentVariable("OPENAI_API_VERSION");
+            _cfg.Organization ??= Environment.GetEnvironmentVariable("OPENAI_ORG");
+            _cfg.Project ??= Environment.GetEnvironmentVariable("OPENAI_PROJECT");
+
+            if (string.IsNullOrWhiteSpace(_cfg.ApiKey))
+                throw new InvalidOperationException("Falta OpenAI ApiKey. Configura OpenAi:ApiKey en appsettings o OPENAI_API_KEY.");
+
+            _cfg.BaseUrl = _cfg.BaseUrl!.TrimEnd('/');
+
+            _isAzure = (_cfg.Provider?.Equals("azure", StringComparison.OrdinalIgnoreCase) ?? false)
+                       || _cfg.BaseUrl.Contains("openai.azure.com", StringComparison.OrdinalIgnoreCase);
         }
 
         public async Task<IReadOnlyList<TitleCandidate>> SugerirTitulosAsync(string descripcion, int maxResultados = 5, CancellationToken ct = default)
@@ -65,7 +66,7 @@ namespace Cine.Services
                 $"con hasta {maxResultados} candidatos ordenados por probabilidad. No incluyas texto adicional.";
 
             var req = new ChatRequest(
-                Model: _model,
+                Model: _cfg.Model!,
                 Messages: new List<ChatMessage>
                 {
                     new("system", systemPrompt),
@@ -75,28 +76,24 @@ namespace Cine.Services
                 ResponseFormat: new { type = "json_object" }
             );
 
-            // Construir URL y headers según proveedor
-            string url;
             using var msg = new HttpRequestMessage();
             if (_isAzure)
             {
-                if (string.IsNullOrWhiteSpace(_apiVersion))
-                    throw new InvalidOperationException("Para Azure OpenAI debes definir OPENAI_API_VERSION, p.ej. 2024-06-01");
-                url = $"{_endpoint}/openai/deployments/{_model}/chat/completions?api-version={_apiVersion}";
+                if (string.IsNullOrWhiteSpace(_cfg.ApiVersion))
+                    throw new InvalidOperationException("Para Azure OpenAI define OpenAi:ApiVersion o OPENAI_API_VERSION (p.ej. 2024-06-01).");
                 msg.Method = HttpMethod.Post;
-                msg.RequestUri = new Uri(url);
-                msg.Headers.Add("api-key", _apiKey);
+                msg.RequestUri = new Uri($"{_cfg.BaseUrl}/openai/deployments/{_cfg.Model}/chat/completions?api-version={_cfg.ApiVersion}");
+                msg.Headers.Add("api-key", _cfg.ApiKey);
             }
             else
             {
-                url = $"{_endpoint}/v1/chat/completions";
                 msg.Method = HttpMethod.Post;
-                msg.RequestUri = new Uri(url);
-                msg.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
-                if (!string.IsNullOrWhiteSpace(_org))
-                    msg.Headers.Add("OpenAI-Organization", _org);
-                if (!string.IsNullOrWhiteSpace(_project))
-                    msg.Headers.Add("OpenAI-Project", _project);
+                msg.RequestUri = new Uri($"{_cfg.BaseUrl}/v1/chat/completions");
+                msg.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _cfg.ApiKey);
+                if (!string.IsNullOrWhiteSpace(_cfg.Organization))
+                    msg.Headers.Add("OpenAI-Organization", _cfg.Organization);
+                if (!string.IsNullOrWhiteSpace(_cfg.Project))
+                    msg.Headers.Add("OpenAI-Project", _cfg.Project);
             }
 
             msg.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
@@ -106,20 +103,17 @@ namespace Cine.Services
             var body = await resp.Content.ReadAsStringAsync(ct);
             if (!resp.IsSuccessStatusCode)
             {
-                throw new HttpRequestException($"Error llamando al proveedor de IA: {(int)resp.StatusCode} {resp.StatusCode}. Cuerpo: {body}");
+                throw new HttpRequestException($"Error OpenAI: {(int)resp.StatusCode} {resp.StatusCode}. Cuerpo: {body}");
             }
 
             var parsed = JsonSerializer.Deserialize<ChatResponse>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             var content = parsed?.Choices?[0]?.Message?.Content;
-
-            if (string.IsNullOrWhiteSpace(content))
-                return Array.Empty<TitleCandidate>();
+            if (string.IsNullOrWhiteSpace(content)) return Array.Empty<TitleCandidate>();
 
             var candidates = JsonSerializer.Deserialize<AiCandidates>(content, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             })?.Candidates ?? new List<TitleCandidate>();
-
             candidates.RemoveAll(c => string.IsNullOrWhiteSpace(c.Title));
             return candidates;
         }
