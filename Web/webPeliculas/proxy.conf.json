@@ -3,5 +3,13 @@
     "target": "https://localhost:7247",
     "secure": false,
     "changeOrigin": true
+  },
+  "/imdb-media": {
+    "target": "https://imdb.iamidiotareyoutoo.com",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/imdb-media": ""
+    }
   }
 }

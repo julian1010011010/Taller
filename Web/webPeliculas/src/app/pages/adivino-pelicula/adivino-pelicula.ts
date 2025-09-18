@@ -24,7 +24,6 @@ export class AdivinoPeliculaPage {
   loading = false;
   error: string | null = null;
   result: GuessResponse | null = null;
-  usedAi = false;
   private submitSub?: Subscription;
 
   onSubmit() {
@@ -33,20 +32,12 @@ export class AdivinoPeliculaPage {
     this.error = null;
     this.result = null;
     const desc = this.description.trim();
-    let usedAi = false;
     this.submitSub?.unsubscribe();
     this.submitSub = this.svc
       .guessMovie(desc)
       .pipe(
         timeout({ each: 8000 }),
-        // En caso de error, probar fallback IA
-        catchError(() => {
-          return this.svc.guessMovieAi(desc).pipe(
-            timeout({ each: 12000 }),
-            tap(() => (usedAi = true))
-          );
-        }),
-        // Si también falla el fallback, mostrar error y continuar con null
+        // Si falla, mostrar error y continuar con null
         catchError((err) => {
           this.error = err?.message || 'No se pudo adivinar la película';
           return of(null);
@@ -58,7 +49,6 @@ export class AdivinoPeliculaPage {
       )
       .subscribe((res) => {
         this.result = res;
-        this.usedAi = usedAi;
         this.cdr.markForCheck();
       });
 
@@ -79,7 +69,6 @@ export class AdivinoPeliculaPage {
     this.description = '';
     this.result = null;
     this.error = null;
-  this.candidates = [];
-    this.usedAi = true;
+    this.candidates = [];
   }
 }

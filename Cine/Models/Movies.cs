@@ -30,5 +30,12 @@ namespace Cine.Models
         [JsonPropertyName("#IMG_POSTER")]
         public string ImgPoster { get; set; }
     }
+    public sealed class MediaStreamResult
+    {
+        public Stream Stream { get; init; } = default!;
+        public string ContentType { get; init; } = "video/mp4";
+        public string? ETag { get; init; }
+        public DateTimeOffset? LastModified { get; init; }
+    }
 
 }

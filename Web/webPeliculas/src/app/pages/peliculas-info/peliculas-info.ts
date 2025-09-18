@@ -4,11 +4,12 @@ import { PLATFORM_ID, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MoviesService, MovieItem } from '../../services/movies.service';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-peliculas-info',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './peliculas-info.html',
   styles: `
     .movie-poster { height: 280px; object-fit: cover; }

@@ -1,10 +1,11 @@
 import { Component } from '@angular/core';
+import { MapComponent } from '../../components/map/map';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-hoja-de-vida',
   standalone: true,
-  imports: [],
+  imports: [MapComponent],
   templateUrl: './hoja-de-vida.html',
   styles: ``
 })

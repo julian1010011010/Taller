@@ -1,0 +1,90 @@
+<section>
+  <a class="btn btn-link text-secondary px-0 mb-3" routerLink="/peliculas">← Volver</a>
+
+  <!-- Loading state -->
+  <div *ngIf="loading()" class="text-center py-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-2 text-secondary">Cargando información de la película...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error()" class="alert alert-danger">
+    <strong>Error:</strong> {{ error() }}
+    <div class="mt-2">
+      <a class="btn btn-secondary btn-sm" routerLink="/peliculas">Volver al listado</a>
+    </div>
+  </div>
+
+  <!-- Movie content -->
+  <div *ngIf="!loading() && !error() && movie()">
+    <div class="d-flex flex-column flex-lg-row gap-4 align-items-start">
+      <img *ngIf="movie()?.poster" [src]="movie()!.poster" [alt]="movie()!.title" class="rounded border border-secondary shadow" style="width: 220px; height: 330px; object-fit: cover;"/>
+
+      <div class="flex-fill">
+        <h2 class="mb-1">{{ movie()?.title || 'Detalle de película' }}</h2>
+        <p class="text-secondary mb-2" *ngIf="movie()?.year">Año: {{ movie()!.year }}</p>
+        <p class="text-secondary mb-4" *ngIf="movie()?.actors">Actores: {{ movie()!.actors }}</p>
+
+        <p class="mb-4">{{ description() }}</p>
+
+        <div class="d-flex gap-2 flex-wrap">
+          <a *ngIf="movie()?.imdbUrl" class="btn btn-primary" [href]="movie()!.imdbUrl" target="_blank" rel="noopener">Abrir en IMDb</a>
+          <a class="btn btn-outline-secondary" routerLink="/peliculas">Volver al listado</a>
+        </div>
+      </div>
+    </div>
+
+ 
+
+    <div class="mt-4">
+      <h5 class="mb-2">Trailer</h5>
+      <div class="ratio ratio-16x9 bg-dark-subtle border border-secondary rounded overflow-hidden">
+        
+        <!-- Video loading state -->
+        <div *ngIf="videoLoading()" class="d-flex align-items-center justify-content-center">
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando video...</span>
+            </div>
+            <p class="mt-2 text-secondary">Cargando video...</p>
+          </div>
+        </div>
+
+        <!-- Video error state -->
+        <div *ngIf="videoError() && !videoLoading()" class="d-flex align-items-center justify-content-center">
+          <div class="text-center text-muted">
+            <i class="bi bi-camera-video-off-fill fs-1 mb-2"></i>
+            <p>{{ videoError() }}</p>
+            <small class="text-secondary">El video no está disponible para esta película</small>
+          </div>
+        </div>
+
+        <!-- Video content -->
+        <video *ngIf="videoUrl() && !videoLoading() && !videoError()"
+               [src]="videoUrl()"
+               controls
+               preload="metadata"
+               [poster]="movie()?.poster"
+               style="width:100%;max-width:900px;border-radius:12px"
+               (error)="videoError.set('Error al reproducir el video')">
+          Tu navegador no soporta video HTML5.
+        </video>
+
+        <!-- No video state (when no error and no loading but also no video) -->
+        <div *ngIf="!videoUrl() && !videoLoading() && !videoError()" class="d-flex align-items-center justify-content-center">
+          <div class="text-center text-muted">
+            <i class="bi bi-camera-video fs-1 mb-2"></i>
+            <p>Video no disponible</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No movie state -->
+  <div class="alert alert-warning mt-3" *ngIf="!loading() && !error() && !movie()">
+    No se recibió la información de la película. Intenta volver al listado y abrir el detalle nuevamente.
+  </div>
+</section>

@@ -18,7 +18,7 @@ namespace Cine.Controllers
             "Matrix", "Matrix 1 ", "Matrix 2 ", "Matrix 3 ", "Matrix 4 "
         };
 
-        public  MovieController(CallApiMovies callApiMovies, IMovieIdentifier identifier)
+        public MovieController(CallApiMovies callApiMovies, IMovieIdentifier identifier)
         {
             _callApiMovies = callApiMovies;
             _identifier = identifier;
@@ -56,6 +56,8 @@ namespace Cine.Controllers
             }
         }
 
+
+
         // POST api/movie/adivinar
         [HttpPost("adivinar")]
         public async Task<IActionResult> Adivinar([FromBody] string descripcion, CancellationToken ct)
@@ -78,6 +80,32 @@ namespace Cine.Controllers
 
             var items = await _identifier.IdentificarCandidatosAsync(descripcion, ct: ct);
             return Ok(items);
+        }
+
+        [HttpGet("media/{imdbId}")]
+        public async Task<IActionResult> Media(string imdbId, CancellationToken ct)
+        {
+            try
+            {
+                var media = await _callApiMovies.ObtenerMediaAsync(imdbId, ct);
+
+                // Habilita rangos para <video> (seek)
+                Response.Headers["Accept-Ranges"] = "bytes";
+
+                // Propaga metadatos útiles (opcionales)
+                if (!string.IsNullOrEmpty(media.ETag))
+                    Response.Headers["ETag"] = media.ETag!;
+                if (media.LastModified is not null)
+                    Response.Headers["Last-Modified"] = media.LastModified.Value.ToString("R");
+                Response.Headers["Cache-Control"] = "public, max-age=3600";
+
+                // Devuelve stream sin cargar a memoria + rangos
+                return File(media.Stream, media.ContentType, enableRangeProcessing: true);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error al obtener media", detalle = ex.Message });
+            }
         }
     }
 }

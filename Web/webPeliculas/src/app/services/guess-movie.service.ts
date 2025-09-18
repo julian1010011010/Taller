@@ -35,11 +35,4 @@ export class GuessMovieService {
       })
       .pipe(map(items => items?.map(mapApiMovie) ?? []));
   }
-
-  // Opcional: endpoint AI en tu backend (ej. /api/Movie/adivinar/ai)
-  guessMovieAi(description: string): Observable<GuessResponse> {
-    return this.http.post<GuessResponse>('/api/Movie/adivinar/ai', JSON.stringify(description), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
 }

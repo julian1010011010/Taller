@@ -30,7 +30,9 @@
 						<p class="card-text text-secondary small">{{ m.actors }}</p>
 					</div>
 					<div class="card-footer bg-transparent border-secondary">
-						<a class="btn btn-outline-info btn-sm w-100" [href]="m.imdbUrl" target="_blank" rel="noopener">Ver en IMDb</a>
+						<a class="btn btn-outline-info btn-sm w-100"
+						   [routerLink]="['/pelicula', m.imdbId]"
+						   [state]="{ movie: m }">Ver detalles</a>
 					</div>
 				</div>
 			</div>

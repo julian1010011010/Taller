@@ -1,5 +1,36 @@
 <section class="container">
-  <h2 class="mb-3">Adivino tu película</h2>
+  <h2 class="mb-2">Adivino tu película</h2>
+
+  <p class="lead text-secondary mb-3">
+    🎬 Cuéntame una escena, una frase, un actor o cualquier detalle que recuerdes y trataré de adivinar el título.
+    Entre más preciso seas (época, lugar, tono), ¡mejor el resultado!
+  </p>
+
+  <div class="mb-3">
+    <small class="text-secondary d-block mb-2">Sugerencias rápidas:</small>
+    <div class="d-flex flex-wrap gap-2">
+      <button type="button" class="btn btn-sm btn-outline-warning"
+        (click)="description='Un científico viaja al pasado usando un auto modificado para arreglar la vida de sus padres'">
+        Viajes en el tiempo
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-info"
+        (click)="description='Un grupo debe destruir un anillo maldito arrojándolo a un volcán mientras son perseguidos por criaturas oscuras'">
+        Fantasía épica
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-danger"
+        (click)="description='Un tiburón gigante aterroriza a los bañistas de una tranquila isla turística en verano'">
+        Terror en la playa
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-success"
+        (click)="description='Una tripulación espacial responde a una señal misteriosa y desata una amenaza letal a bordo'">
+        Sci‑Fi claustrofóbico
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-primary"
+        (click)="description='Un ladrón entra en los sueños de las personas para implantar una idea en la mente de un ejecutivo'">
+        Sueños dentro de sueños
+      </button>
+    </div>
+  </div>
 
   <form class="bg-dark border border-secondary rounded p-3" (ngSubmit)="onSubmit()">
     <div class="mb-3">
@@ -29,7 +60,6 @@
           <div class="card-body">
             <h5 class="card-title">
               {{ result.title }} <small class="text-secondary" *ngIf="result.year">({{ result.year }})</small>
-              <span class="badge text-bg-warning ms-2" *ngIf="usedAi">IA</span>
             </h5>
             <p class="card-text text-secondary" *ngIf="result.plot">{{ result.plot }}</p>
             <p class="card-text" *ngIf="result.confidence !== undefined">
