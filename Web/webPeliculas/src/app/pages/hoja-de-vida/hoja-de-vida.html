@@ -20,6 +20,7 @@
 						</li>
 					}
 				</ul>
+ 
 			</div>
 		</div>
 	</div>
@@ -45,9 +46,74 @@
 			<h4 class="mb-3">Skills</h4>
 			<div class="d-flex flex-wrap gap-2">
 				@for (s of skills; track s) {
-					<span class="badge bg-secondary-subtle text-light border border-secondary">{{ s }}</span>
+					<span class="badge text-bg-primary">{{ s }}</span>
 				}
 			</div>
 		</div>
 	</div>
+ 
+	<!-- Secciones adicionales: se muestran solo si tienen contenido -->
+	@if (education.length) {
+		<hr class="border-secondary my-4" />
+		<h4 class="mb-3">Educación</h4>
+		<div class="list-group mb-3">
+			@for (e of education; track e.title) {
+				<div class="list-group-item bg-dark border-secondary text-light">
+					<div class="d-flex w-100 justify-content-between">
+						<h5 class="mb-1">{{ e.title }}</h5>
+						<small class="text-secondary">{{ e.start }} - {{ e.end || 'Actual' }}</small>
+					</div>
+					<p class="mb-0 text-secondary">{{ e.institution }}</p>
+					@if (e.details) {
+						<p class="mb-0 mt-1 text-secondary">{{ e.details }}</p>
+					}
+				</div>
+			}
+		</div>
+	}
+
+	@if (experience.length) {
+		<hr class="border-secondary my-4" />
+		<h4 class="mb-3">Experiencia</h4>
+		<div class="list-group mb-3">
+			@for (x of experience; track x.role) {
+				<div class="list-group-item bg-dark border-secondary text-light">
+					<div class="d-flex w-100 justify-content-between">
+						<h5 class="mb-1">{{ x.role }} - {{ x.company }}</h5>
+						<small class="text-secondary">{{ x.start }} - {{ x.end || 'Actual' }}</small>
+					</div>
+					@if (x.description) {
+						<p class="mb-0 text-secondary">{{ x.description }}</p>
+					}
+				</div>
+			}
+		</div>
+	}
+
+	@if (certifications.length) {
+		<hr class="border-secondary my-4" />
+		<h4 class="mb-3">Certificaciones</h4>
+		<ul class="list-unstyled">
+			@for (c of certifications; track c.name) {
+				<li class="text-secondary mb-1">
+					<strong class="text-light">{{ c.name }}</strong>
+					<span class="ms-1">{{ c.issuer }}</span>
+					<span class="ms-1">{{ c.year }}</span>
+					@if (c.url) {
+						<a class="link-info ms-2" [href]="c.url" target="_blank" rel="noopener">Ver</a>
+					}
+				</li>
+			}
+		</ul>
+	}
+
+	@if (languages.length) {
+		<hr class="border-secondary my-4" />
+		<h4 class="mb-3">Idiomas</h4>
+		<div class="d-flex flex-wrap gap-2">
+			@for (l of languages; track l.name) {
+				<span class="badge bg-dark border border-secondary text-light">{{ l.name }} — {{ l.level }}</span>
+			}
+		</div>
+	}
 </section>

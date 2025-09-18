@@ -1,4 +1,6 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { PLATFORM_ID, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MoviesService, MovieItem } from '../../services/movies.service';
@@ -14,6 +16,7 @@ import { MoviesService, MovieItem } from '../../services/movies.service';
 })
 export class PeliculasInfo {
   private readonly moviesSvc = inject(MoviesService);
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
   query = signal('Matrix');
   tipo = signal(''); // movie, series, etc.
@@ -23,7 +26,9 @@ export class PeliculasInfo {
   movies = signal<MovieItem[]>([]);
 
   ngOnInit() {
-    this.search();
+    if (isPlatformBrowser(this.platformId)) {
+      this.search();
+    }
   }
 
   search() {
