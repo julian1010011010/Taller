@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace CineApi.Controllers
+namespace Cine.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -29,5 +29,6 @@ namespace CineApi.Controllers
             })
             .ToArray();
         }
+ 
     }
 }

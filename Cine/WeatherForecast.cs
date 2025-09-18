@@ -1,4 +1,4 @@
-namespace CineApi
+namespace Cine
 {
     public class WeatherForecast
     {
