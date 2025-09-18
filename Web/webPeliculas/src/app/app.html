@@ -184,17 +184,11 @@
 
 <app-header />
 
-<nav class="nav">
-  <a routerLink="/peliculas" routerLinkActive="active">Más información de películas</a>
-  <a routerLink="/hoja-de-vida" routerLinkActive="active">Hoja de vida</a>
-  <span class="spacer"></span>
-  <span class="brand">{{ title() }}</span>
-</nav>
-
-<main>
+<main class="container py-4">
   <router-outlet />
-  <!-- SSR-friendly outlet is already included by Angular -->
-  
 </main>
+
+<!-- Mapa cerca del footer -->
+<app-map />
 
 <app-footer />

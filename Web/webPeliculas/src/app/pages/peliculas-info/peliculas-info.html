@@ -1,1 +1,49 @@
-<p>peliculas-info works!</p>
+<section>
+	<h2 class="mb-4">Películas</h2>
+
+			<form class="row g-2 mb-4" (ngSubmit)="resetPageAndSearch()">
+				<div class="col-sm-6 col-md-5">
+					<input class="form-control bg-dark text-light border-secondary" type="text" placeholder="Buscar por título (ej: Matrix)" [ngModel]="query()" (ngModelChange)="query.set($event)" name="q">
+				</div> 
+			
+				<div class="col-auto">
+					<button class="btn btn-primary" type="submit" [disabled]="loading()">Buscar</button>
+				</div>
+			</form>
+
+	@if (loading()) {
+		<div class="alert alert-info">Cargando películas...</div>
+	}
+
+	@if (error()) {
+		<div class="alert alert-danger">{{ error() }}</div>
+	}
+
+	<div class="row g-4">
+		@for (m of movies(); track m.imdbId) {
+			<div class="col-12 col-sm-6 col-md-4 col-lg-3">
+				<div class="card bg-dark border-secondary h-100 shadow-sm">
+					<img class="card-img-top movie-poster" [src]="m.poster" [alt]="m.title" />
+					<div class="card-body">
+						<h5 class="card-title">{{ m.title }}</h5>
+						<p class="card-text text-secondary mb-2">{{ m.year }}</p>
+						<p class="card-text text-secondary small">{{ m.actors }}</p>
+					</div>
+					<div class="card-footer bg-transparent border-secondary">
+						<a class="btn btn-outline-info btn-sm w-100" [href]="m.imdbUrl" target="_blank" rel="noopener">Ver en IMDb</a>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+
+		@if (!loading() && !error() && movies().length === 0) {
+			<div class="alert alert-warning mt-3">No se encontraron resultados.</div>
+		}
+
+		<div class="d-flex align-items-center gap-2 mt-4">
+			<button class="btn btn-outline-secondary" (click)="prevPage()" [disabled]="page() === 1 || loading()">Anterior</button>
+			<span class="text-secondary">Página {{ page() }}</span>
+			<button class="btn btn-outline-secondary" (click)="nextPage()" [disabled]="loading()">Siguiente</button>
+		</div>
+</section>

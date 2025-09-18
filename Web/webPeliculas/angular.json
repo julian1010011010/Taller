@@ -24,6 +24,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "foto.jpg",
+                "input": "src/app/pages/hoja-de-vida",
+                "output": "assets/hoja-de-vida"
               }
             ],
             "styles": [
@@ -66,7 +71,8 @@
               "buildTarget": "webPeliculas:build:production"
             },
             "development": {
-              "buildTarget": "webPeliculas:build:development"
+              "buildTarget": "webPeliculas:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

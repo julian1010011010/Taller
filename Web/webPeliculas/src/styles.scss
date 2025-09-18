@@ -1,1 +1,14 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global styles */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+body {
+	background-color: #0b0e14; /* dark theme for cinema vibe */
+	color: #e6edf3;
+}
+
+a { color: #7cc4ff; }
+a:hover { color: #9dd6ff; }
+
+.brand {
+	font-weight: 700;
+}
