@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { GuessMovieService, GuessResponse } from '../../services/guess-movie.service';
 import { MovieItem } from '../../services/movies.service';
 import { Subscription, catchError, finalize, of, tap, timeout } from 'rxjs';
@@ -8,7 +9,7 @@ import { Subscription, catchError, finalize, of, tap, timeout } from 'rxjs';
 @Component({
   selector: 'app-adivino-pelicula',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './adivino-pelicula.html',
   styles: `
     textarea { resize: vertical; }
@@ -17,6 +18,7 @@ import { Subscription, catchError, finalize, of, tap, timeout } from 'rxjs';
 export class AdivinoPeliculaPage {
   private readonly svc = inject(GuessMovieService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
 
   description = '';
   candidates: MovieItem[] = [];
@@ -70,5 +72,31 @@ export class AdivinoPeliculaPage {
     this.result = null;
     this.error = null;
     this.candidates = [];
+  }
+
+  navigateToMovieDetail(movie: MovieItem) {
+    this.router.navigate(['/movie-detail'], { state: { movie } });
+  }
+
+  navigateToResultDetail() {
+    if (!this.result) return;
+    
+    // Convert GuessResponse to MovieItem format
+    const movieItem: MovieItem = {
+      title: this.result.title,
+      year: typeof this.result.year === 'string' ? parseInt(this.result.year) : (this.result.year || 0),
+      imdbId: '', // No tenemos imdbId del resultado adivinado
+      actors: '',
+      imdbUrl: '',
+      poster: this.result.poster || ''
+    };
+
+    // Add plot as extended property
+    const movieWithPlot = {
+      ...movieItem,
+      plot: this.result.plot
+    };
+
+    this.router.navigate(['/movie-detail'], { state: { movie: movieWithPlot } });
   }
 }
